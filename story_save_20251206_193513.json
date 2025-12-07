@@ -1,0 +1,105 @@
+{
+  "story_state": {
+    "genre": "adventure",
+    "mood": "neutral",
+    "characters": [],
+    "locations": [
+      "mysterious"
+    ],
+    "items": [],
+    "story_arc": [
+      "The plot thickens as mysteries deepen and shadows grow longer... What discovery awaits just beyond sight?",
+      "\ud83d\udd2e Curiously, continue the story:  gold coins and silver and copper coins and gold coins: gold and silver coins and copper and silver capsules and gold",
+      "\ud83d\udd2e As the story unfolds, continue the story: ---------------------------about the author: ____________________ edit edit editdescription edit edit: edi"
+    ],
+    "preferences": {},
+    "voice_emotion": "neutral"
+  },
+  "branches": [
+    {
+      "timestamp": "2025-12-06T19:34:21.199688",
+      "story_state": {
+        "genre": "adventure",
+        "mood": "neutral",
+        "characters": [],
+        "locations": [
+          "mysterious"
+        ],
+        "items": [],
+        "story_arc": [
+          "The plot thickens as mysteries deepen and shadows grow longer... What discovery awaits just beyond sight?",
+          "\ud83d\udd2e Curiously, continue the story:  gold coins and silver and copper coins and gold coins: gold and silver coins and copper and silver capsules and gold",
+          "\ud83d\udd2e As the story unfolds, continue the story: ---------------------------about the author: ____________________ edit edit editdescription edit edit: edi"
+        ],
+        "preferences": {},
+        "voice_emotion": "neutral"
+      },
+      "location": "Beginning",
+      "items": [],
+      "story_arc_snapshot": [
+        "The plot thickens as mysteries deepen and shadows grow longer... What discovery awaits just beyond sight?",
+        "\ud83d\udd2e Curiously, continue the story:  gold coins and silver and copper coins and gold coins: gold and silver coins and copper and silver capsules and gold",
+        "\ud83d\udd2e As the story unfolds, continue the story: ---------------------------about the author: ____________________ edit edit editdescription edit edit: edi"
+      ]
+    },
+    {
+      "timestamp": "2025-12-06T19:34:40.899985",
+      "story_state": {
+        "genre": "adventure",
+        "mood": "neutral",
+        "characters": [],
+        "locations": [
+          "mysterious"
+        ],
+        "items": [],
+        "story_arc": [
+          "The plot thickens as mysteries deepen and shadows grow longer... What discovery awaits just beyond sight?",
+          "\ud83d\udd2e Curiously, continue the story:  gold coins and silver and copper coins and gold coins: gold and silver coins and copper and silver capsules and gold",
+          "\ud83d\udd2e As the story unfolds, continue the story: ---------------------------about the author: ____________________ edit edit editdescription edit edit: edi"
+        ],
+        "preferences": {},
+        "voice_emotion": "neutral"
+      },
+      "location": "mysterious",
+      "items": [],
+      "story_arc_snapshot": [
+        "The plot thickens as mysteries deepen and shadows grow longer... What discovery awaits just beyond sight?",
+        "\ud83d\udd2e Curiously, continue the story:  gold coins and silver and copper coins and gold coins: gold and silver coins and copper and silver capsules and gold",
+        "\ud83d\udd2e As the story unfolds, continue the story: ---------------------------about the author: ____________________ edit edit editdescription edit edit: edi"
+      ]
+    }
+  ],
+  "preferences": {
+    "movement": 1,
+    "mood_preference": {
+      "neutral": 2
+    },
+    "narrative": 1
+  },
+  "history": [
+    {
+      "timestamp": "2025-12-06T19:34:21.200321",
+      "input": {
+        "raw_text": "gold coins",
+        "sentiment": "neutral",
+        "keywords": [
+          "gold"
+        ],
+        "action_type": "movement",
+        "voice_emotion": "neutral"
+      },
+      "mode": "text"
+    },
+    {
+      "timestamp": "2025-12-06T19:34:40.899985",
+      "input": {
+        "raw_text": "back",
+        "sentiment": "neutral",
+        "keywords": [],
+        "action_type": "narrative",
+        "voice_emotion": "neutral"
+      },
+      "mode": "text"
+    }
+  ]
+}

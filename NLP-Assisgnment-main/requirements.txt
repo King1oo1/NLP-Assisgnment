@@ -1,0 +1,12 @@
+nltk
+textblob
+transformers
+torch
+speechrecognition
+pyaudio
+whisper
+openai-whisper
+sounddevice
+numpy
+scipy
+colorama
