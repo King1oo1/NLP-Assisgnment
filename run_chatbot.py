@@ -1,4 +1,4 @@
-from plot_twist_interface import PlotTwistChatbot
+from plot_twist_chatbot import PlotTwistChatbot
 
 if __name__ == "__main__":
     # Create chatbot instance
@@ -7,14 +7,16 @@ if __name__ == "__main__":
     # Start the conversation
     chatbot.greeting()
     
-    # Initial story generation
-    initial_response = chatbot.generate_response({
-        "action_type": "narrative", 
-        "sentiment": "neutral",
-        "keywords": [],
-        "voice_emotion": "neutral"
-    })
-    print(f"\n{initial_response}")
+    # If story was loaded in greeting, skip initial generation
+    if not chatbot.conversation_history:
+        # Initial story generation
+        initial_response = chatbot.generate_response({
+            "action_type": "narrative", 
+            "sentiment": "neutral",
+            "keywords": [],
+            "voice_emotion": "neutral"
+        })
+        print(f"\n{initial_response}")
     
     # Main conversation loop
     while chatbot.conversation_is_active:
@@ -40,3 +42,6 @@ if __name__ == "__main__":
             print(f"\n{response}")
     
     chatbot.farewell()
+    
+    
+    
