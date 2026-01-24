@@ -2,17 +2,18 @@
 
 An interactive storytelling chatbot that creates dynamic adventures based on user input using advanced NLP techniques.
 
-## Enhanced Features
-- **Voice Recognition** - Accepts voice input using Whisper/Vosk models with error correction and confidence feedback
-- **Voice Emotion Detection** - Detects emotion from voice tone to influence the story
-- **BART Integration** - Uses BART model for coherent and context-aware story generation
-- **Story Branch Backtracking** - Allows going back to previous choices
-- **User Preference Learning** - Adapts to user's style and preferences over time
-- **Real-time Feedback** - Explains story logic and adjustments
-- **Sentiment Analysis** - Adapts story tone based on user emotions
-- **Keyword Detection** - Identifies important story elements
-- **Text Classification** - Categorizes user actions
-- **Adaptive Storytelling** - Generates personalized narratives
+## Key Features
+- **Text/Voice Mode:** Speak or Write your text with emotion detection
+- **Save/Load System:** Continue adventures later
+- **BART Integration** Uses BART model for coherent and context-aware story generation
+- **Story Branch Backtracking:** Allows going back to previous choices
+- **User Preference Learning:** Adapts to user's style and preferences over time
+- **Real-time Feedback:** Explains story logic and adjustments
+- **Sentiment Analysis:** Adapts story tone based on user emotions
+- **Keyword Detection:** Identifies important story elements
+- **Text Classification:** Categorizes user actions
+- **Adaptive Storytelling:** Generates personalized narratives
+
 
 ## Installation
 
@@ -40,3 +41,8 @@ pip install -r requirements.txt
 
 # Run the chatbot
 python plot_twist_chatbot.py
+
+
+
+
+
