@@ -10,3 +10,4 @@ sounddevice
 numpy
 scipy
 colorama
+pillow 

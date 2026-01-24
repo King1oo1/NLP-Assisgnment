@@ -1,0 +1,111 @@
+{
+  "story_state": {
+    "genre": "adventure",
+    "mood": "neutral",
+    "characters": [],
+    "locations": [
+      "temple",
+      "temple"
+    ],
+    "items": [],
+    "story_arc": [
+      "\ud83d\udd2e Suddenly, the story takes an unexpected turn... where does your curiosity lead you now?",
+      "\ud83c\udf1f Optimistically, continue the story:  i am going to castle full of ghosts in the new world different from the earth and i am not afraid of the earth ",
+      "Continue the story:  i am going to explore the castle and see what i can find out about this place. i am not going to After some time, you arrive at a"
+    ],
+    "preferences": {},
+    "voice_emotion": "neutral"
+  },
+  "branches": [
+    {
+      "timestamp": "2026-01-24T16:17:26.138952",
+      "story_state": {
+        "genre": "adventure",
+        "mood": "neutral",
+        "characters": [],
+        "locations": [
+          "temple",
+          "temple"
+        ],
+        "items": [],
+        "story_arc": [
+          "\ud83d\udd2e Suddenly, the story takes an unexpected turn... where does your curiosity lead you now?",
+          "\ud83c\udf1f Optimistically, continue the story:  i am going to castle full of ghosts in the new world different from the earth and i am not afraid of the earth ",
+          "Continue the story:  i am going to explore the castle and see what i can find out about this place. i am not going to After some time, you arrive at a"
+        ],
+        "preferences": {},
+        "voice_emotion": "neutral"
+      },
+      "location": "Beginning",
+      "items": [],
+      "story_arc_snapshot": [
+        "\ud83d\udd2e Suddenly, the story takes an unexpected turn... where does your curiosity lead you now?",
+        "\ud83c\udf1f Optimistically, continue the story:  i am going to castle full of ghosts in the new world different from the earth and i am not afraid of the earth ",
+        "Continue the story:  i am going to explore the castle and see what i can find out about this place. i am not going to After some time, you arrive at a"
+      ]
+    },
+    {
+      "timestamp": "2026-01-24T16:18:23.563042",
+      "story_state": {
+        "genre": "adventure",
+        "mood": "neutral",
+        "characters": [],
+        "locations": [
+          "temple",
+          "temple"
+        ],
+        "items": [],
+        "story_arc": [
+          "\ud83d\udd2e Suddenly, the story takes an unexpected turn... where does your curiosity lead you now?",
+          "\ud83c\udf1f Optimistically, continue the story:  i am going to castle full of ghosts in the new world different from the earth and i am not afraid of the earth ",
+          "Continue the story:  i am going to explore the castle and see what i can find out about this place. i am not going to After some time, you arrive at a"
+        ],
+        "preferences": {},
+        "voice_emotion": "neutral"
+      },
+      "location": "temple",
+      "items": [],
+      "story_arc_snapshot": [
+        "\ud83d\udd2e Suddenly, the story takes an unexpected turn... where does your curiosity lead you now?",
+        "\ud83c\udf1f Optimistically, continue the story:  i am going to castle full of ghosts in the new world different from the earth and i am not afraid of the earth ",
+        "Continue the story:  i am going to explore the castle and see what i can find out about this place. i am not going to After some time, you arrive at a"
+      ]
+    }
+  ],
+  "preferences": {
+    "movement": 2,
+    "mood_preference": {
+      "positive": 1,
+      "neutral": 1
+    }
+  },
+  "history": [
+    {
+      "timestamp": "2026-01-24T16:17:26.156520",
+      "input": {
+        "raw_text": "i am going to castle full of ghosts in the new world different from the earth",
+        "sentiment": "positive",
+        "keywords": [
+          "castle"
+        ],
+        "action_type": "movement",
+        "voice_emotion": "neutral"
+      },
+      "mode": "text"
+    },
+    {
+      "timestamp": "2026-01-24T16:18:23.564692",
+      "input": {
+        "raw_text": "i am going to explore the castle",
+        "sentiment": "neutral",
+        "keywords": [
+          "explore",
+          "castle"
+        ],
+        "action_type": "movement",
+        "voice_emotion": "neutral"
+      },
+      "mode": "text"
+    }
+  ]
+}

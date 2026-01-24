@@ -16,7 +16,6 @@ import queue
 import time
 from datetime import datetime
 from colorama import Fore, Style, init
-
 # Initialize colorama
 init(autoreset=True)
 

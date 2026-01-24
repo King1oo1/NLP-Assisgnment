@@ -1,4 +1,4 @@
-from plot_twist_chatbot import PlotTwistChatbot
+from plot_twist_interface import PlotTwistChatbot
 
 if __name__ == "__main__":
     # Create chatbot instance
