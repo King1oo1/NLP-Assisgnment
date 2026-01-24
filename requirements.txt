@@ -10,4 +10,5 @@ sounddevice
 numpy
 scipy
 colorama
+pathlib
 pillow 

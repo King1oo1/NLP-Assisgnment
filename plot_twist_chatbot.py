@@ -16,6 +16,8 @@ import queue
 import time
 from datetime import datetime
 from colorama import Fore, Style, init
+from pathlib import Path
+
 # Initialize colorama
 init(autoreset=True)
 
@@ -75,7 +77,8 @@ class PlotTwistChatbot(ChatbotBase):
         
         # Voice recognition setup
         self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
+        self.microphone = None
+        self.microphone_available = False
         self.whisper_model = None
         self.recognition_confidence_threshold = 0.6
         
@@ -92,8 +95,12 @@ class PlotTwistChatbot(ChatbotBase):
         self.story_coherence_score = 0
         self.user_engagement_level = 0
         
-        # Initialize with calibration
-        self.calibrate_microphone()
+        # Create saved stories folder if it doesn't exist
+        self.saved_stories_folder = Path("saved_stories")
+        self.saved_stories_folder.mkdir(exist_ok=True)
+        
+        # Initialize voice recognition system
+        self.check_microphone_availability()
     
     def initialize_bart_model(self):
         """Initialize BART model for enhanced story generation"""
@@ -106,25 +113,66 @@ class PlotTwistChatbot(ChatbotBase):
             print(f"{Fore.RED}Could not load BART model: {e}{Style.RESET_ALL}")
             print(f"{Fore.YELLOW}Using fallback story generation.{Style.RESET_ALL}")
     
-    def calibrate_microphone(self):
-        """Calibrate microphone for ambient noise"""
+    def check_microphone_availability(self):
+        """Check if microphone is available without initializing it"""
         try:
-            print(f"{Fore.CYAN}Calibrating microphone...{Style.RESET_ALL}")
+            print(f"{Fore.CYAN}Checking microphone availability...{Style.RESET_ALL}")
+            
+            # List available microphones
+            mic_list = sr.Microphone.list_microphone_names()
+            if mic_list:
+                print(f"{Fore.GREEN}✓ Microphone detected: {mic_list[0]}{Style.RESET_ALL}")
+                self.microphone_available = True
+            else:
+                print(f"{Fore.YELLOW}⚠ No microphones detected{Style.RESET_ALL}")
+                self.microphone_available = False
+                
+        except Exception as e:
+            print(f"{Fore.YELLOW}⚠ Could not check microphone: {e}{Style.RESET_ALL}")
+            self.microphone_available = False
+    
+    def initialize_microphone(self):
+        """Initialize microphone when needed"""
+        try:
+            print(f"{Fore.CYAN}Initializing microphone...{Style.RESET_ALL}")
+            self.microphone = sr.Microphone()
+            
+            # Quick test to ensure microphone works
             with self.microphone as source:
-                self.recognizer.adjust_for_ambient_noise(source, duration=2)
-            print(f"{Fore.GREEN}Microphone calibrated!{Style.RESET_ALL}")
-        except:
-            print(f"{Fore.YELLOW}Microphone calibration skipped. Using text mode.{Style.RESET_ALL}")
-            self.conversation_mode = "text"
+                print(f"{Fore.GREEN}✓ Microphone ready!{Style.RESET_ALL}")
+                return True
+                
+        except Exception as e:
+            print(f"{Fore.RED}✗ Failed to initialize microphone: {e}{Style.RESET_ALL}")
+            self.microphone = None
+            self.microphone_available = False
+            return False
     
     def receive_voice_input(self):
         """Receive voice input with error correction and confidence feedback"""
+        
+        # Check if microphone is available
+        if not self.microphone_available:
+            print(f"{Fore.YELLOW}Voice mode not available. Please use text input.{Style.RESET_ALL}")
+            return input(f"{Fore.GREEN}> {Style.RESET_ALL}")
+        
+        # Initialize microphone if not already done
+        if self.microphone is None:
+            if not self.initialize_microphone():
+                print(f"{Fore.YELLOW}Falling back to text input.{Style.RESET_ALL}")
+                self.conversation_mode = "text"
+                return input(f"{Fore.GREEN}> {Style.RESET_ALL}")
+        
         print(f"{Fore.CYAN}🎤 Listening... (speak now){Style.RESET_ALL}")
         
-        with self.microphone as source:
-            try:
+        try:
+            # Use the microphone context manager properly
+            with self.microphone as source:
+                # Adjust for ambient noise
+                self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
+                
                 # Listen with timeout
-                audio = self.recognizer.listen(source, timeout=10, phrase_time_limit=8)
+                audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=5)
                 
                 # Try multiple recognition methods
                 recognized_text = None
@@ -132,15 +180,18 @@ class PlotTwistChatbot(ChatbotBase):
                 
                 # Method 1: Google Speech Recognition
                 try:
-                    recognized_text = self.recognizer.recognize_google(audio, show_all=False)
+                    recognized_text = self.recognizer.recognize_google(audio)
                     confidence = 0.7
-                except:
-                    pass
+                    print(f"{Fore.GREEN}✓ Google recognition successful{Style.RESET_ALL}")
+                except Exception as e:
+                    print(f"{Fore.YELLOW}⚠ Google recognition failed: {e}{Style.RESET_ALL}")
                 
-                # Method 2: Whisper fallback
+                # Method 2: Whisper fallback (only if Google fails)
                 if not recognized_text:
                     try:
+                        print(f"{Fore.CYAN}Trying Whisper recognition...{Style.RESET_ALL}")
                         if self.whisper_model is None:
+                            print(f"{Fore.YELLOW}Loading Whisper model...{Style.RESET_ALL}")
                             self.whisper_model = whisper.load_model("base")
                         
                         # Save audio to temp file for whisper
@@ -149,16 +200,18 @@ class PlotTwistChatbot(ChatbotBase):
                             f.write(audio.get_wav_data())
                         
                         result = self.whisper_model.transcribe(temp_file)
-                        recognized_text = result["text"]
+                        recognized_text = result["text"].strip()
                         confidence = 0.6
                         
                         # Clean up temp file
                         if os.path.exists(temp_file):
                             os.remove(temp_file)
+                            
+                        print(f"{Fore.GREEN}✓ Whisper recognition successful{Style.RESET_ALL}")
                     except Exception as e:
-                        print(f"{Fore.RED}Whisper error: {e}{Style.RESET_ALL}")
+                        print(f"{Fore.RED}✗ Whisper failed: {e}{Style.RESET_ALL}")
                 
-                if recognized_text:
+                if recognized_text and len(recognized_text.strip()) > 0:
                     # Extract voice emotion
                     emotion = self.extract_voice_emotion(audio)
                     self.story_state["voice_emotion"] = emotion
@@ -167,24 +220,32 @@ class PlotTwistChatbot(ChatbotBase):
                     confidence_bar = self.create_confidence_bar(confidence)
                     print(f"{Fore.GREEN}✅ Recognized: \"{recognized_text}\"")
                     print(f"{Fore.BLUE}Confidence: {confidence_bar} ({confidence:.2%}){Style.RESET_ALL}")
+                    print(f"{Fore.CYAN}Voice emotion: {emotion}{Style.RESET_ALL}")
                     
                     # Low confidence handling
                     if confidence < self.recognition_confidence_threshold:
-                        print(f"{Fore.YELLOW}⚠️  Low confidence. Say 're-record' to try again.{Style.RESET_ALL}")
+                        print(f"{Fore.YELLOW}⚠ Low confidence. Say 're-record' to try again.{Style.RESET_ALL}")
                         if "re-record" in recognized_text.lower():
                             return self.receive_voice_input()
                     
                     return recognized_text
                 else:
-                    print(f"{Fore.RED}❌ Could not understand audio. Please try again.{Style.RESET_ALL}")
-                    return self.receive_voice_input()
+                    print(f"{Fore.RED}❌ Could not understand audio. Please try again or type your input.{Style.RESET_ALL}")
+                    print(f"{Fore.YELLOW}Falling back to text input.{Style.RESET_ALL}")
+                    return input(f"{Fore.GREEN}> {Style.RESET_ALL}")
                     
-            except sr.WaitTimeoutError:
-                print(f"{Fore.YELLOW}⏰ Listening timeout. Please try again.{Style.RESET_ALL}")
-                return ""
-            except Exception as e:
-                print(f"{Fore.RED}Voice recognition error: {e}{Style.RESET_ALL}")
-                return input(f"{Fore.GREEN}Please type your input: {Style.RESET_ALL}")
+        except sr.WaitTimeoutError:
+            print(f"{Fore.YELLOW}⏰ No speech detected. Please try again.{Style.RESET_ALL}")
+            return ""
+        except sr.UnknownValueError:
+            print(f"{Fore.RED}❌ Could not understand audio.{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Falling back to text input.{Style.RESET_ALL}")
+            return input(f"{Fore.GREEN}> {Style.RESET_ALL}")
+        except Exception as e:
+            print(f"{Fore.RED}✗ Voice recognition error: {str(e)[:100]}...{Style.RESET_ALL}")
+            print(f"{Fore.YELLOW}Switching to text mode.{Style.RESET_ALL}")
+            self.conversation_mode = "text"
+            return input(f"{Fore.GREEN}> {Style.RESET_ALL}")
     
     def extract_voice_emotion(self, audio):
         """Extract emotion from voice characteristics"""
@@ -220,33 +281,43 @@ class PlotTwistChatbot(ChatbotBase):
 
 I'll be your Game Master for an interactive adventure with new features!
 
-{Fore.MAGENTA}New Features:{Style.RESET_ALL}
-• Voice Mode: Speak your commands (with emotion detection!)
-• Voice Commands: "go back", "save story", "change mode"
-• Emotion Detection: Your tone influences the plot!
+{Fore.MAGENTA}Features:{Style.RESET_ALL}
+• Text/Voice Mode : Speak or Write your text (with emotion detection!)
 • Branch Backtracking: Revisit previous choices
 • Personalized Stories: Learns your preferences
 • Enhanced Narratives: More coherent storytelling
-
-{Fore.YELLOW}Modes:{Style.RESET_ALL}
-• Type/Say: "switch to voice" or "switch to text"
-• Default: Text mode
+• Save/Load System: Continue your adventures later!
 
 {Fore.CYAN}Commands:{Style.RESET_ALL}
 • Type/Say: "{Fore.GREEN}go back{Style.RESET_ALL}" to revisit previous choice
 • Type/Say: "{Fore.BLUE}save story{Style.RESET_ALL}" to save current progress
+• Type/Say: "{Fore.GREEN}load story{Style.RESET_ALL}" to load a saved adventure
 • Type/Say: "{Fore.YELLOW}explain{Style.RESET_ALL}" to understand story logic
+• Type/Say: "{Fore.GREEN}switch to voice{Style.RESET_ALL}" or "{Fore.GREEN}switch to text{Style.RESET_ALL}"
 • Type/Say: "{Fore.RED}quit{Style.RESET_ALL}" to exit
 
 {Fore.WHITE}Where would you like to begin?{Style.RESET_ALL}
         """
         print(greeting_msg)
         
-        # Ask for mode preference
-        mode_choice = input(f"{Fore.CYAN}Start with voice mode? (yes/no) [default: no]: {Style.RESET_ALL}").lower()
-        if mode_choice == "yes":
-            self.conversation_mode = "voice"
-            print(f"{Fore.GREEN}Voice mode activated! Say 'switch to text' to change.{Style.RESET_ALL}")
+        # Ask if user wants to load a saved story
+        load_choice = input(f"{Fore.CYAN}Load a saved story? (yes/no) [default: no]: {Style.RESET_ALL}").lower()
+        if load_choice == "yes":
+            result = self.load_story_progress()
+            if result:
+                print(result["response"])
+            return
+        
+        # Ask for mode preference only if microphone is available
+        if self.microphone_available:
+            mode_choice = input(f"{Fore.CYAN}Start with voice mode? (yes/no) [default: no]: {Style.RESET_ALL}").lower()
+            if mode_choice == "yes":
+                self.conversation_mode = "voice"
+                print(f"{Fore.GREEN}✓ Voice mode activated! Say 'switch to text' to change.{Style.RESET_ALL}")
+            else:
+                print(f"{Fore.CYAN}Starting in text mode. Say 'switch to voice' to change.{Style.RESET_ALL}")
+        else:
+            print(f"{Fore.YELLOW}⚠ Voice mode not available (no microphone detected). Starting in text mode.{Style.RESET_ALL}")
     
     def process_input(self, user_input):
         """Process user input using NLP techniques"""
@@ -286,12 +357,18 @@ I'll be your Game Master for an interactive adventure with new features!
         
         # Mode switching
         if "switch to voice" in lower_input:
-            self.conversation_mode = "voice"
-            return {"command": "mode_switch", "response": "Switched to voice mode. Speak your commands!"}
+            if self.microphone_available:
+                if self.microphone is None:
+                    if not self.initialize_microphone():
+                        return {"command": "mode_switch", "response": f"{Fore.RED}✗ Could not initialize microphone. Staying in text mode.{Style.RESET_ALL}"}
+                self.conversation_mode = "voice"
+                return {"command": "mode_switch", "response": f"{Fore.GREEN}✓ Switched to voice mode. Speak your commands!{Style.RESET_ALL}"}
+            else:
+                return {"command": "mode_switch", "response": f"{Fore.YELLOW}⚠ Voice mode not available. No microphone detected.{Style.RESET_ALL}"}
         
         elif "switch to text" in lower_input:
             self.conversation_mode = "text"
-            return {"command": "mode_switch", "response": "Switched to text mode. Type your commands!"}
+            return {"command": "mode_switch", "response": f"{Fore.GREEN}✓ Switched to text mode. Type your commands!{Style.RESET_ALL}"}
         
         # Backtracking
         elif any(cmd in lower_input for cmd in ["go back", "previous", "backtrack", "undo", "last choice"]):
@@ -300,6 +377,14 @@ I'll be your Game Master for an interactive adventure with new features!
         # Story saving
         elif any(cmd in lower_input for cmd in ["save story", "save progress", "save game"]):
             return self.save_story_progress()
+        
+        # Story loading
+        elif any(cmd in lower_input for cmd in ["load story", "load progress", "load game", "continue story"]):
+            return self.load_story_progress()
+        
+        # List saved stories
+        elif any(cmd in lower_input for cmd in ["list stories", "show saves", "saved games"]):
+            return self.list_saved_stories()
         
         # Explain logic
         elif any(cmd in lower_input for cmd in ["explain", "why", "how", "logic"]):
@@ -345,23 +430,152 @@ What would you like to do differently?
         self.story_branches.append(branch)
     
     def save_story_progress(self):
-        """Save current story progress to file"""
+        """Save current story progress to file in saved_stories folder"""
         filename = f"story_save_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filepath = self.saved_stories_folder / filename
+        
         save_data = {
             "story_state": self.story_state,
             "branches": self.story_branches,
             "preferences": self.user_style_preferences,
-            "history": self.conversation_history[-10:]
+            "history": self.conversation_history[-10:],
+            "saved_at": datetime.now().isoformat(),
+            "locations": self.story_state["locations"],
+            "items": self.story_state["items"],
+            "story_summary": self.generate_story_summary()
         }
         
         try:
-            with open(filename, 'w') as f:
+            with open(filepath, 'w') as f:
                 json.dump(save_data, f, indent=2)
-            response = f"{Fore.GREEN}✅ Story saved to '{filename}'{Style.RESET_ALL}"
+            response = f"""
+{Fore.GREEN}✅ Story saved successfully!{Style.RESET_ALL}
+{Fore.CYAN}File: {filename}{Style.RESET_ALL}
+{Fore.CYAN}Path: {filepath}{Style.RESET_ALL}
+{Fore.YELLOW}Story Summary:{Style.RESET_ALL}
+{self.generate_story_summary()}
+            """
         except Exception as e:
             response = f"{Fore.RED}❌ Error saving story: {e}{Style.RESET_ALL}"
         
         return {"command": "save", "response": response}
+    
+    def load_story_progress(self, filename=None):
+        """Load story progress from a saved file"""
+        # List available saves if no filename provided
+        if not filename:
+            saved_files = list(self.saved_stories_folder.glob("*.json"))
+            
+            if not saved_files:
+                return {"command": "load", "response": f"{Fore.YELLOW}No saved stories found in '{self.saved_stories_folder}'{Style.RESET_ALL}"}
+            
+            # Sort by modification time (newest first)
+            saved_files.sort(key=os.path.getmtime, reverse=True)
+            
+            print(f"{Fore.CYAN}📚 Available saved stories:{Style.RESET_ALL}")
+            for i, file in enumerate(saved_files[:10], 1):  # Show only first 10
+                mtime = datetime.fromtimestamp(os.path.getmtime(file))
+                print(f"{Fore.YELLOW}{i}. {file.name}{Style.RESET_ALL} - Saved: {mtime.strftime('%Y-%m-%d %H:%M')}")
+            
+            try:
+                choice = input(f"{Fore.GREEN}Enter number to load (or 'cancel'): {Style.RESET_ALL}")
+                if choice.lower() == 'cancel':
+                    return {"command": "load", "response": "Load cancelled."}
+                
+                idx = int(choice) - 1
+                if 0 <= idx < len(saved_files):
+                    filename = saved_files[idx]
+                else:
+                    return {"command": "load", "response": f"{Fore.RED}Invalid choice.{Style.RESET_ALL}"}
+            except ValueError:
+                return {"command": "load", "response": f"{Fore.RED}Please enter a valid number.{Style.RESET_ALL}"}
+        
+        filepath = self.saved_stories_folder / filename if isinstance(filename, str) else filename
+        
+        try:
+            with open(filepath, 'r') as f:
+                save_data = json.load(f)
+            
+            # Restore all saved data
+            self.story_state = save_data.get("story_state", self.story_state)
+            self.story_branches = save_data.get("branches", [])
+            self.user_style_preferences = save_data.get("preferences", {})
+            self.conversation_history = save_data.get("history", [])
+            
+            # Update coherence score
+            self.story_coherence_score = self.calculate_coherence_score()
+            
+            response = f"""
+{Fore.GREEN}✅ Story loaded successfully!{Style.RESET_ALL}
+{Fore.CYAN}File: {filepath.name}{Style.RESET_ALL}
+{Fore.YELLOW}Story Summary:{Style.RESET_ALL}
+{save_data.get('story_summary', 'No summary available')}
+{Fore.CYAN}Loaded Data:{Style.RESET_ALL}
+• Locations visited: {len(save_data.get('locations', []))}
+• Items collected: {len(save_data.get('items', []))}
+• Story branches: {len(self.story_branches)}
+• Saved at: {save_data.get('saved_at', 'Unknown')}
+            """
+            return {"command": "load", "response": response}
+            
+        except FileNotFoundError:
+            return {"command": "load", "response": f"{Fore.RED}❌ File '{filename}' not found.{Style.RESET_ALL}"}
+        except json.JSONDecodeError:
+            return {"command": "load", "response": f"{Fore.RED}❌ File is corrupted or invalid JSON.{Style.RESET_ALL}"}
+        except Exception as e:
+            return {"command": "load", "response": f"{Fore.RED}❌ Error loading story: {e}{Style.RESET_ALL}"}
+    
+    def list_saved_stories(self):
+        """List all saved stories"""
+        saved_files = list(self.saved_stories_folder.glob("*.json"))
+        
+        if not saved_files:
+            return {"command": "list", "response": f"{Fore.YELLOW}No saved stories found in '{self.saved_stories_folder}'{Style.RESET_ALL}"}
+        
+        # Sort by modification time (newest first)
+        saved_files.sort(key=os.path.getmtime, reverse=True)
+        
+        response_lines = [f"{Fore.CYAN}📚 Saved Stories ({len(saved_files)} found):{Style.RESET_ALL}"]
+        
+        for i, file in enumerate(saved_files[:15], 1):  # Show only first 15
+            # Try to get basic info from the save file
+            try:
+                with open(file, 'r') as f:
+                    save_data = json.load(f)
+                locations = len(save_data.get('locations', []))
+                items = len(save_data.get('items', []))
+                summary = save_data.get('story_summary', 'No summary')[:50] + "..."
+                mtime = datetime.fromtimestamp(os.path.getmtime(file))
+                
+                response_lines.append(
+                    f"{Fore.YELLOW}{i}. {file.name}{Style.RESET_ALL}\n"
+                    f"   {Fore.GREEN}Saved: {mtime.strftime('%Y-%m-%d %H:%M')} | "
+                    f"Locations: {locations} | Items: {items}{Style.RESET_ALL}\n"
+                    f"   {Fore.CYAN}{summary}{Style.RESET_ALL}"
+                )
+            except:
+                mtime = datetime.fromtimestamp(os.path.getmtime(file))
+                response_lines.append(f"{Fore.YELLOW}{i}. {file.name} (Saved: {mtime.strftime('%Y-%m-%d %H:%M')}){Style.RESET_ALL}")
+        
+        response_lines.append(f"\n{Fore.GREEN}Say 'load story' followed by the number to load.{Style.RESET_ALL}")
+        
+        return {"command": "list", "response": "\n".join(response_lines)}
+    
+    def generate_story_summary(self):
+        """Generate a summary of the current story"""
+        if not self.story_state["locations"]:
+            return "Your adventure is just beginning!"
+        
+        summary = f"""Adventure Summary:
+• Genre: {self.story_state['genre']}
+• Mood: {self.story_state['mood']}
+• Locations visited: {len(set(self.story_state['locations']))}
+• Items collected: {len(self.story_state['items'])}
+• Recent location: {self.story_state['locations'][-1] if self.story_state['locations'] else 'Beginning'}
+• Key items: {', '.join(self.story_state['items'][-3:]) if self.story_state['items'] else 'None'}
+• Story coherence: {self.story_coherence_score:.1f}/10"""
+        
+        return summary
     
     def explain_story_logic(self):
         """Explain why the story changed based on user input"""
@@ -762,6 +976,13 @@ What would you like to do differently?
                 if isinstance(count, int) and count > 0:
                     print(f"  {pref}: {count} times")
         
+        # Save suggestion
+        save_choice = input(f"\n{Fore.YELLOW}Would you like to save your story before exiting? (yes/no): {Style.RESET_ALL}").lower()
+        if save_choice == "yes":
+            save_result = self.save_story_progress()
+            print(save_result["response"])
+        
+        print(f"\n{Fore.YELLOW}Saves are stored in: {self.saved_stories_folder}{Style.RESET_ALL}")
         print(f"{Fore.YELLOW}Hope to continue your adventure soon!{Style.RESET_ALL}")
         print(f"{Fore.CYAN}{'='*50}{Style.RESET_ALL}")
 
@@ -769,14 +990,16 @@ def main():
     chatbot = PlotTwistChatbot()
     chatbot.greeting()
     
-    # Initial story generation
-    initial_response = chatbot.generate_response({
-        "action_type": "narrative", 
-        "sentiment": "neutral",
-        "keywords": [],
-        "voice_emotion": "neutral"
-    })
-    print(f"\n{Fore.MAGENTA}{initial_response}{Style.RESET_ALL}")
+    # If story was loaded in greeting, skip initial generation
+    if not chatbot.conversation_history:
+        # Initial story generation
+        initial_response = chatbot.generate_response({
+            "action_type": "narrative", 
+            "sentiment": "neutral",
+            "keywords": [],
+            "voice_emotion": "neutral"
+        })
+        print(f"\n{Fore.MAGENTA}{initial_response}{Style.RESET_ALL}")
     
     # Main conversation loop
     while chatbot.conversation_is_active:

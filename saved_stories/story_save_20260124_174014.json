@@ -1,0 +1,65 @@
+{
+  "story_state": {
+    "genre": "adventure",
+    "mood": "neutral",
+    "characters": [],
+    "locations": [],
+    "items": [],
+    "story_arc": [
+      "The story takes an unexpected turn... What discovery awaits you around the next corner?",
+      "\ud83d\udd2e As events unfold, continue the story:  wild castle in the forest and the forest of the foresttranscript for wild castle on the forest:  the forest y"
+    ],
+    "preferences": {},
+    "voice_emotion": "neutral"
+  },
+  "branches": [
+    {
+      "timestamp": "2026-01-24T17:39:52.335347",
+      "story_state": {
+        "genre": "adventure",
+        "mood": "neutral",
+        "characters": [],
+        "locations": [],
+        "items": [],
+        "story_arc": [
+          "The story takes an unexpected turn... What discovery awaits you around the next corner?",
+          "\ud83d\udd2e As events unfold, continue the story:  wild castle in the forest and the forest of the foresttranscript for wild castle on the forest:  the forest y"
+        ],
+        "preferences": {},
+        "voice_emotion": "neutral"
+      },
+      "location": "Beginning",
+      "items": [],
+      "story_arc_snapshot": [
+        "The story takes an unexpected turn... What discovery awaits you around the next corner?",
+        "\ud83d\udd2e As events unfold, continue the story:  wild castle in the forest and the forest of the foresttranscript for wild castle on the forest:  the forest y"
+      ]
+    }
+  ],
+  "preferences": {
+    "narrative": 1,
+    "mood_preference": {
+      "neutral": 1
+    }
+  },
+  "history": [
+    {
+      "timestamp": "2026-01-24T17:39:52.335347",
+      "input": {
+        "raw_text": "wild castle in the forest",
+        "sentiment": "neutral",
+        "keywords": [
+          "castle",
+          "forest"
+        ],
+        "action_type": "narrative",
+        "voice_emotion": "neutral"
+      },
+      "mode": "text"
+    }
+  ],
+  "saved_at": "2026-01-24T17:40:14.738688",
+  "locations": [],
+  "items": [],
+  "story_summary": "Your adventure is just beginning!"
+}
